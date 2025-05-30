@@ -10,6 +10,9 @@ import seaborn as sns            # Pour améliorer le style et la lisibilité de
 #   compétences requises (liste de chaînes),
 #   liste des tâches prédécesseurs (liste de chaînes),
 #   importance (int)
+
+# Exemple de tâches
+# task_id: (durée, [compétences nécessaires], [prédécesseurs], importance)
 tasks = {
     'A': (4, ['dev'], [], 10),
     'B': (3, ['dev'], ['A'], 8),
@@ -26,20 +29,45 @@ resources = {'dev': 2, 'test': 1}
 # Par exemple, shortest processing time (SPT), longest, nombre de successeurs, importance
 
 
-def prio_shortest(task):
+def prio_shortest(task):    # Durée la plus courte (SPT)
+    # Renvoie la durée de la tâche
+    # La tâche avec la durée la plus courte sera priorisée
+    # pour être exécutée en premier
+    # (tâche la plus courte en premier)
+    # (Shortest Processing Time)
+    # (SPT)
     return tasks[task][0]
 
 
 def prio_longest(task):
+    # Durée la plus longue (LPT)
+    # Renvoie la durée de la tâche
+    # La tâche avec la durée la plus longue sera priorisée
+    # pour être exécutée en premier
+    # (tâche la plus longue en premier)
+    # (Longest Processing Time)
+    # (LPT)
     return -tasks[task][0]
 
 
 def prio_most_successors(task):
     # Compte combien de tâches ont 'task' comme prédécesseur
+    # Renvoie le nombre de successeurs directs
+    # La tâche avec le plus de successeurs sera priorisée
+    # pour être exécutée en premier
+    # (tâche avec le plus de successeurs en premier)
+    # (Most Successors)
+    # (MS)
     return -sum(1 for t in tasks if task in tasks[t][2])
 
 
 def prio_most_important(task):
+    # Renvoie l'importance de la tâche
+    # La tâche la plus importante sera priorisée
+    # pour être exécutée en premier
+    # (tâche la plus importante en premier)
+    # (Most Important)
+    # (MI)
     return -tasks[task][3]
 
 
@@ -170,20 +198,20 @@ def run_all():
 
     # Exporter résultats dans un fichier CSV
     df = pd.DataFrame(results)
-    df.to_csv('src/comparison_ms_rcpsp.csv', index=False)
+    df.to_csv('figures/comparison_ms_rcpsp.csv', index=False)
 
     # Tracer graphiques comparatifs pour le makespan
     plt.figure(figsize=(10,6))
     sns.barplot(data=df, x='priority', y='makespan', hue='algo')
     plt.title("Makespan selon algorithme et priorité")
-    plt.savefig("src/makespan_comparison.png")
+    plt.savefig("figures/makespan_comparison.png")
     plt.show()
 
     # Tracer graphiques comparatifs pour la durée d'exécution
     plt.figure(figsize=(10,6))
     sns.barplot(data=df, x='priority', y='duration_sec', hue='algo')
     plt.title("Durée d'exécution selon algorithme et priorité")
-    plt.savefig("src/duration_comparison.png")
+    plt.savefig("figures/duration_comparison.png")
     plt.show()
 
     # Afficher les diagrammes de Gantt pour chaque ordonnancement testé
@@ -191,7 +219,7 @@ def run_all():
     for ax, (sched, title) in zip(axs.flatten(), schedules_for_gantt):
         plot_gantt(sched, ax, title)
     plt.tight_layout()
-    plt.savefig("src/gantt_schedules.png")
+    plt.savefig("figures/gantt_schedules.png")
     plt.show()
 
 # Point d'entrée du script

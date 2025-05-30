@@ -1,9 +1,0 @@
-algo,priority,makespan,duration_sec
-parallel,shortest,12,4.458427429199219e-05
-parallel,longest,12,1.7881393432617188e-05
-parallel,most_successors,12,3.337860107421875e-05
-parallel,important,12,1.4543533325195312e-05
-series,shortest,17,1.4066696166992188e-05
-series,longest,17,1.0251998901367188e-05
-series,most_successors,17,1.3589859008789062e-05
-series,important,17,8.106231689453125e-06
