@@ -29,6 +29,19 @@ Critères de priorité disponibles :
 
 ---
 
+## Structure du projet
+
+```
+project/
+├── figures/                                            # Graphiques et visuels liés au projet
+├── main.py                                             # Point d'entrée principal en Python
+├── main.cpp                                            # Point d'entrée principal en C++
+├── README.md                                           # Documentation du projet
+└── Resume_MS-RCPSP_Algorithmes_Priorites_Design.pdf    # Résumé des algorithmes
+
+```
+---
+
 ## Installation (Python)
 
 Assurez-vous d’avoir Python 3, puis installez les dépendances :
