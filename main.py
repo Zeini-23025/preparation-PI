@@ -243,6 +243,35 @@ def run_all():
     plt.savefig("figures/gantt_schedules.png")
     plt.show()
 
+    fig_index = 1
+
+    for algo_type in ['parallel', 'series']:
+        for prio_name, prio_func in priorities.items():
+            start_time = time.time()
+            if algo_type == 'parallel':
+                sched, mksp = schedule_parallel(prio_func)
+            else:
+                sched, mksp = schedule_series(prio_func)
+            duration = time.time() - start_time
+            results.append({
+                'algo': algo_type,
+                'priority': prio_name,
+                'makespan': mksp,
+                'duration_sec': duration
+            })
+
+            # Affichage console
+            print(f"[{algo_type} - {prio_name}] Makespan: {mksp}, Durée: {duration:.4f}s")
+
+            # Tracer et sauvegarder figure Gantt individuelle
+            fig, ax = plt.subplots(figsize=(10, 4))
+            plot_gantt(sched, ax, f"{algo_type.capitalize()} - {prio_name}")
+            plt.tight_layout()
+            plt.savefig(f"figures/gantt_schedule_{fig_index}_{algo_type}_{prio_name}.png")
+            plt.show()
+            plt.close(fig)
+            fig_index += 1
+
 # Point d'entrée du script
 
 
