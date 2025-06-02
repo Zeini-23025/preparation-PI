@@ -16,12 +16,30 @@ struct Task {
     int importance;
 };
 
+// map<string, Task> tasks = {
+//     {"A", {4, {"dev"}, {}, 10}},
+//     {"B", {3, {"dev"}, {"A"}, 8}},
+//     {"C", {2, {"test"}, {"A"}, 6}},
+//     {"D", {5, {"dev", "test"}, {"B", "C"}, 9}},
+//     {"E", {3, {"dev"}, {"C"}, 5}},
+// };
+
+
+
+
 map<string, Task> tasks = {
-    {"A", {4, {"dev"}, {}, 10}},
-    {"B", {3, {"dev"}, {"A"}, 8}},
-    {"C", {2, {"test"}, {"A"}, 6}},
-    {"D", {5, {"dev", "test"}, {"B", "C"}, 9}},
-    {"E", {3, {"dev"}, {"C"}, 5}},
+    {"users", {3, {"dev"}, {}, 10}},
+    {"assureurs", {2, {"dev"}, {}, 8}},
+    {"offres", {4, {"dev"}, {"users", "assureurs"}, 6}},
+    {"contrats", {5, {"dev", "test"}, {"offres"}, 9}},
+    {"paiement", {3, {"dev"}, {"contrats"}, 5}},
+    {"notification", {2, {"dev"}, {"paiement", "users"}, 7}},
+    {"reclamation", {4, {"dev"}, {"users", "contrats"}, 6}},
+    {"client", {3, {"dev"}, {"users"}, 5}},
+    {"echange", {2, {"dev"}, {"contrats"}, 4}},
+    {"document", {3, {"dev"}, {"users", "assureurs"}, 8}},
+    {"message", {2, {"dev"}, {"users", "assureurs"}, 7}},
+    {"renouvellement", {4, {"dev"}, {"users", "assureurs", "contrats"}, 9}},
 };
 
 map<string, int> resources = {{"dev", 2}, {"test", 1}};
