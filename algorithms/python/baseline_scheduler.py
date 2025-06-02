@@ -1,42 +1,51 @@
-#             ------------------ employés multiskills MAIS 1 skill/tâche max ---------------
-import time
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
+import time                      # Pour mesurer la durée d'exécution des algorithmes
+import pandas as pd              # Pour gérer facilement les données en tableau (DataFrame) et exporter en CSV
+import matplotlib.pyplot as plt  # Pour tracer les graphiques (barres, Gantt, etc.)
+import seaborn as sns            # Pour améliorer le style et la lisibilité des graphiques matplotlib
 
 # ----------- DÉFINITION DES DONNÉES ------------
+# Dictionnaire des tâches
+# Chaque tâche est définie par :
+#   durée (int),
+#   compétences requises (liste de chaînes),
+#   liste des tâches prédécesseurs (liste de chaînes),
+#   importance (int)
 
+# Exemple de tâches
+# task_id: (durée, [compétences nécessaires], [prédécesseurs], importance)
 tasks = {
-    'users': (3, {'dev': 1}, [], 10),
-    'assureurs': (2, {'dev': 1}, [], 8),
-    'offres': (4, {'dev': 2}, ['users', 'assureurs'], 6),
-    'contrats': (5, {'dev': 2, 'test': 1}, ['offres'], 9),
-    'paiement': (3, {'dev': 1, 'test': 1}, ['contrats'], 5),
-    'notification': (2, {'dev': 1}, ['paiement', 'users'], 7),
-    'reclamation': (4, {'dev': 1}, ['users', 'contrats'], 6),
-    'client': (3, {'dev': 1}, ['users'], 5),
-    'echange': (2, {'dev': 1}, ['contrats'], 4),
-    'document': (3, {'dev': 2}, ['users', 'assureurs'], 8),
-    'message': (2, {'dev': 1}, ['users', 'assureurs'], 7),
-    'renouvellement': (4, {'dev': 2}, ['users', 'assureurs', 'contrats'], 9),
+    'A': (4, ['dev'], [], 10),
+    'B': (3, ['dev'], ['A'], 8),
+    'C': (2, ['test'], ['A'], 6),
+    'D': (5, ['dev', 'test'], ['B', 'C'], 9),
+    'E': (3, ['dev'], ['C'], 5),
 }
 
-employees = [
-    {'name': 'Zeiny', 'skills': ['dev', 'test']},
-    {'name': 'Nezihe', 'skills': ['dev']},
-    {'name': 'Mli7a', 'skills': ['test']},
-]
+tasks = {
+    'users': (3, ['dev'], [], 10),
+    'assureurs': (2, ['dev'], [], 8),
+    'offres': (4, ['dev'], ['users', 'assureurs'], 6),
+    'contrats': (5, ['dev', 'test'], ['users', 'assureurs'], 9),
+    'paiement': (3, ['dev', 'test'], ['contrats'], 5),
+    'notification': (2, ['dev'], ['paiement', 'users'], 7),
+    'reclamation': (4, ['dev'], ['users', 'contrats'], 6),
+    'client': (3, ['dev'], ['users'], 5),
+    'echange': (2, ['dev'], ['contrats'], 4),
+    'document': (3, ['dev'], ['users'], 8),
+    'message': (2, ['dev'], ['users', 'assureurs'], 7),
+    'renouvellement': (4, ['dev'], ['users', 'contrats'], 9),
+}
 
-# Ressources disponibles
-resources = {}
-for emp in employees:
-    for skill in emp['skills']:
-        resources[skill] = resources.get(skill, 0) + 1
+# Ressources disponibles par compétence
+resources = {'dev': 2, 'test': 1}
 
 # ----------- PRIORITÉS -------------
+# Fonctions qui définissent les priorités pour le tri des tâches prêtes
+# Par exemple, shortest processing time (SPT),
+# longest, nombre de successeurs, importance
 
 
-def prio_shortest(task): 
+def prio_shortest(task):
     # Durée la plus courte (SPT)
     # Renvoie la durée de la tâche
     # La tâche avec la durée la plus courte sera priorisée
@@ -86,68 +95,54 @@ priorities = {
     'important': prio_most_important,
 }
 
-# ----------- AFFECTATION DES EMPLOYÉS (selon compétence) -------------
-
-
-def assign_employees(task_skills, busy_emps):
-    assigned = {}
-    available = [e for e in employees if e['name'] not in busy_emps]
-
-    for skill, needed in task_skills.items():
-        assigned[skill] = []
-        candidates = [e for e in available if skill in e['skills']]
-        for c in candidates:
-            # Vérifie que cet employé n'est pas déjà affecté à une compétence dans cette tâche
-            if len(assigned[skill]) < needed and c['name'] not in sum(assigned.values(), []):
-                assigned[skill].append(c['name'])
-
-    if all(len(assigned[s]) >= task_skills[s] for s in task_skills):
-        return assigned
-    return None  # Pas assez d'employés disponibles
-
-# ----------- ALGO PARALLÈLE -------------
+# ----------- ALGORITHMES -------------
+# Ordonnancement parallèle avec gestion des ressources
+#  et contraintes de précédence
 
 
 def schedule_parallel(prio_func):
-    time_now = 0
-    schedule = []
-    finished = set()
-    running = []
-    remaining = set(tasks.keys())
+    time_now = 0                   # Horloge du système
+    schedule = []                  # Liste des tâches programmées (id, start, end)
+    finished = set()               # Ensemble des tâches terminées
+    running = []                   # Liste des tâches en cours (id, fin)
+    remaining = set(tasks.keys())  # Tâches restantes à programmer
+    skill_usage = {k: 0 for k in resources}  # Compteur d'utilisation des ressources
 
     while remaining or running:
-        # Libération des tâches terminées
-        for t, end, emp_used in running[:]:
+        # Libérer les ressources des tâches terminées à l'instant courant
+        for t, end in running[:]:
             if end <= time_now:
-                running.remove((t, end, emp_used))
+                running.remove((t, end))
                 finished.add(t)
+                for skill in tasks[t][1]:
+                    skill_usage[skill] -= 1
 
-        # Employés occupés à ce moment
-        busy_emps = set(e for _, _, emp in running for e in sum(emp.values(), []))
-
-        # Tâches prêtes
+        # Identifier les tâches prêtes à démarrer (prédécesseurs finis)
         ready = [t for t in remaining if all(p in finished for p in tasks[t][2])]
-        ready.sort(key=prio_func)
+        ready.sort(key=prio_func)  # Trier selon la fonction de priorité choisie
 
+        # Lancer les tâches prêtes si ressources disponibles
         for t in ready:
-            dur, skills, _, _ = tasks[t]
-            assigned = assign_employees(skills, busy_emps)
-            if assigned:
-                print(f"Tâche '{t}' démarrée à {time_now} avec affectation : {assigned}")
-                schedule.append((t, time_now, time_now + dur, assigned))
-                running.append((t, time_now + dur, assigned))
-                busy_emps.update(sum(assigned.values(), []))
+            skills = tasks[t][1]
+            if all(skill_usage[s] < resources[s] for s in skills):
+                for s in skills:
+                    skill_usage[s] += 1
+                start = time_now
+                end = start + tasks[t][0]
+                schedule.append((t, start, end))
+                running.append((t, end))
                 remaining.remove(t)
 
+        # Avancer le temps au prochain événement (fin de tâche)
         if running:
-            time_now = min(end for _, end, _ in running)
-        elif remaining:
-            time_now += 1
+            time_now = min(end for _, end in running)
+        else:
+            break
 
-    makespan = max(e for _, _, e, _ in schedule) if schedule else 0
+    makespan = max(e for _, _, e in schedule) if schedule else 0
     return schedule, makespan
 
-# ----------- ALGO SÉRIE -------------
+# Ordonnancement en série (une tâche à la fois) avec contraintes de précédence
 
 
 def schedule_series(prio_func):
@@ -159,99 +154,94 @@ def schedule_series(prio_func):
     while remaining:
         ready = [t for t in remaining if all(p in finished for p in tasks[t][2])]
         if not ready:
-            raise RuntimeError("Cycle détecté ou tâche bloquée")
+            raise RuntimeError("Cycle détecté ou problème de précédence")
+
         ready.sort(key=prio_func)
         t = ready[0]
-        dur = tasks[t][0]
+        dur, skills, _, _ = tasks[t]
 
-        # Affectation simple pour séries (pas de conflits car séquentiel)
-        assigned = assign_employees(tasks[t][1], [])
-        schedule.append((t, current_time, current_time + dur, assigned))
+        start = current_time
+        end = start + dur
+        schedule.append((t, start, end))
         finished.add(t)
         remaining.remove(t)
-        current_time += dur
+        current_time = end
 
-    makespan = max(e for _, _, e, _ in schedule) if schedule else 0
+    makespan = max(e for _, _, e in schedule) if schedule else 0
     return schedule, makespan
 
-# ----------- GRAPHIQUE GANTT -------------
+# ----------- TRACÉ GANTT -------------
 
 
 def plot_gantt(schedule, ax, title):
-    task_names = sorted(set(t for t, _, _, _ in schedule))
+    # Préparer l'axe Y avec les noms des tâches
+    task_names = sorted(set(t for t, _, _ in schedule))
     task_pos = {t: i for i, t in enumerate(task_names)}
 
-    for t, start, end, _ in schedule:
-        ax.barh(task_pos[t], end - start, left=start, height=0.4)
-        ax.text((start + end) / 2, task_pos[t], t, va='center', ha='center', color='white', fontsize=9)
+    # Tracer une barre horizontale par tâche
+    for t, start, end in schedule:
+        ax.barh(task_pos[t], end-start, left=start, height=0.4)
+        ax.text(start + (end-start)/2, task_pos[t], t, va='center', ha='center', color='white', fontsize=9)
 
     ax.set_yticks(list(task_pos.values()))
     ax.set_yticklabels(task_names)
     ax.set_xlabel('Temps')
     ax.set_title(title)
-    ax.invert_yaxis()
+    ax.invert_yaxis()  # Inverser l'axe Y pour avoir la tâche A en haut
 
-# ----------- VÉRIFICATION QUE UN EMPLOYÉ N'A QU'UNE COMPÉTENCE PAR TÂCHE -------------
-
-
-def verify_single_skill_per_employee(schedule):
-    for t, start, end, assigned in schedule:
-        emp_skills = {}
-        for skill, emps in assigned.items():
-            for emp in emps:
-                if emp in emp_skills:
-                    print(f"⚠️ Violation: L'employé {emp} affecté à plusieurs compétences dans la tâche '{t}'")
-                emp_skills[emp] = skill
-    print("Vérification terminée.")
-
-# ----------- EXÉCUTION -------------
+# ----------- EXÉCUTION ET COMPARAISON -------------
 
 
 def run_all():
     results = []
     schedules_for_gantt = []
 
+    # Tester tous les algorithmes (parallèle et série) avec toutes les priorités
     for algo_type in ['parallel', 'series']:
         for prio_name, prio_func in priorities.items():
-            start_time = time.time()
+            start_time = time.time()    # Démarrer le chrono
             if algo_type == 'parallel':
                 sched, mksp = schedule_parallel(prio_func)
             else:
                 sched, mksp = schedule_series(prio_func)
-            duration = time.time() - start_time
+            duration = time.time() - start_time  # Mesurer durée d'exécution
             results.append({
                 'algo': algo_type,
                 'priority': prio_name,
                 'makespan': mksp,
                 'duration_sec': duration
             })
-            schedules_for_gantt.append((sched, f"{algo_type.capitalize()} - {prio_name}"))
+            schedules_for_gantt.append((
+                sched,
+                f"{algo_type.capitalize()} - {prio_name}"
+                ))
             print(f"[{algo_type} - {prio_name}] Makespan: {mksp}, Durée: {duration:.4f}s")
-            # Vérifier la contrainte
-            verify_single_skill_per_employee(sched)
 
+    # Exporter résultats dans un fichier CSV
     df = pd.DataFrame(results)
     df.to_csv('figures/comparison_ms_rcpsp.csv', index=False)
 
+    # Tracer graphiques comparatifs pour le makespan
     plt.figure(figsize=(10, 6))
     sns.barplot(data=df, x='priority', y='makespan', hue='algo')
     plt.title("Makespan selon algorithme et priorité")
     plt.savefig("figures/makespan_comparison.png")
     plt.show()
 
+    # Tracer graphiques comparatifs pour la durée d'exécution
     plt.figure(figsize=(10, 6))
     sns.barplot(data=df, x='priority', y='duration_sec', hue='algo')
     plt.title("Durée d'exécution selon algorithme et priorité")
     plt.savefig("figures/duration_comparison.png")
     plt.show()
 
+    # Afficher les diagrammes de Gantt pour chaque ordonnancement testé
     fig, axs = plt.subplots(4, 2, figsize=(20, 16), sharex=True)
     for ax, (sched, title) in zip(axs.flatten(), schedules_for_gantt):
         plot_gantt(sched, ax, title)
     plt.tight_layout()
     plt.savefig("figures/gantt_schedules.png")
     plt.show()
-
 
     fig_index = 1
 
@@ -282,8 +272,8 @@ def run_all():
             plt.close(fig)
             fig_index += 1
 
+# Point d'entrée du script
 
-# ----------- LANCEMENT -------------
 
 if __name__ == "__main__":
     run_all()

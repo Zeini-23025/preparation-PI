@@ -33,13 +33,16 @@ Critères de priorité disponibles :
 
 ```
 project/
-├── figures/                                            # Graphiques et visuels liés au projet
-├── main.py                                             # Point d'entrée principal en Python
-├── main.cpp                                            # Point d'entrée principal en C++
-├── README.md                                           # Documentation du projet
-└── Resume_MS-RCPSP_Algorithmes_Priorites_Design.pdf    # Résumé des algorithmes
-
+├── algorithms/                                       #  Versions antérieures du projet
+│   ├── c++/                                          # Code C++
+│   └── python/                                       # Code Python
+├── figures/                                          # Graphiques et visuels liés au projet
+├── main.py                                           # Point d'entrée principal en Python
+├── main.cpp                                          # Point d'entrée principal en C++
+├── README.md                                         # Documentation du projet
+└── requirements.txt                                  # Dépendances Python
 ```
+
 ---
 
 ## Installation (Python)
@@ -123,6 +126,3 @@ La sortie affiche l’ordre des tâches, leurs temps de démarrage et de fin, ai
     ./main
     ```
 4. Consultez les résultats dans `comparison_ms_rcpsp.csv`, les graphiques dans `figures/`, et les ordonnancements en console (C++).
-
----
-
