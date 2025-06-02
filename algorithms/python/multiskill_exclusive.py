@@ -25,6 +25,7 @@ employees = [
     {'name': 'Zeiny', 'skills': ['dev', 'test']},
     {'name': 'Nezihe', 'skills': ['dev']},
     {'name': 'Mli7a', 'skills': ['test']},
+    {'name': 'Zeyd', 'skills': ['dev']},
 ]
 
 # Ressources disponibles
