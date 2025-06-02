@@ -21,15 +21,32 @@ tasks = {
     'E': (3, ['dev'], ['C'], 5),
 }
 
+tasks = {
+    'users': (3, ['dev'], [], 10),
+    'assureurs': (2, ['dev'], [], 8),
+    'offres': (4, ['dev'], ['users', 'assureurs'], 6),
+    'contrats': (5, ['dev', 'test'], ['offres'], 9),
+    'paiement': (3, ['dev', 'test'], ['contrats'], 5),
+    'notification': (2, ['dev'], ['paiement', 'users'], 7),
+    'reclamation': (4, ['dev'], ['users', 'contrats'], 6),
+    'client': (3, ['dev'], ['users'], 5),
+    'echange': (2, ['dev'], ['contrats'], 4),
+    'document': (3, ['dev'], ['users', 'assureurs'], 8),
+    'message': (2, ['dev'], ['users', 'assureurs'], 7),
+    'renouvellement': (4, ['dev'], ['users', 'assureurs', 'contrats'], 9),
+}
+
 # Ressources disponibles par compétence
 resources = {'dev': 2, 'test': 1}
 
 # ----------- PRIORITÉS -------------
 # Fonctions qui définissent les priorités pour le tri des tâches prêtes
-# Par exemple, shortest processing time (SPT), longest, nombre de successeurs, importance
+# Par exemple, shortest processing time (SPT),
+# longest, nombre de successeurs, importance
 
 
-def prio_shortest(task):    # Durée la plus courte (SPT)
+def prio_shortest(task):
+    # Durée la plus courte (SPT)
     # Renvoie la durée de la tâche
     # La tâche avec la durée la plus courte sera priorisée
     # pour être exécutée en premier
@@ -79,15 +96,16 @@ priorities = {
 }
 
 # ----------- ALGORITHMES -------------
-# Ordonnancement parallèle avec gestion des ressources et contraintes de précédence
+# Ordonnancement parallèle avec gestion des ressources
+#  et contraintes de précédence
 
 
 def schedule_parallel(prio_func):
-    time_now = 0                 # Horloge du système
-    schedule = []                # Liste des tâches programmées (id, start, end)
-    finished = set()             # Ensemble des tâches terminées
-    running = []                 # Liste des tâches en cours (id, fin)
-    remaining = set(tasks.keys())# Tâches restantes à programmer
+    time_now = 0                   # Horloge du système
+    schedule = []                  # Liste des tâches programmées (id, start, end)
+    finished = set()               # Ensemble des tâches terminées
+    running = []                   # Liste des tâches en cours (id, fin)
+    remaining = set(tasks.keys())  # Tâches restantes à programmer
     skill_usage = {k: 0 for k in resources}  # Compteur d'utilisation des ressources
 
     while remaining or running:
@@ -157,8 +175,8 @@ def schedule_series(prio_func):
 
 def plot_gantt(schedule, ax, title):
     # Préparer l'axe Y avec les noms des tâches
-    task_names = sorted(set(t for t,_,_ in schedule))
-    task_pos = {t:i for i,t in enumerate(task_names)}
+    task_names = sorted(set(t for t, _, _ in schedule))
+    task_pos = {t: i for i, t in enumerate(task_names)}
 
     # Tracer une barre horizontale par tâche
     for t, start, end in schedule:
@@ -193,7 +211,10 @@ def run_all():
                 'makespan': mksp,
                 'duration_sec': duration
             })
-            schedules_for_gantt.append((sched, f"{algo_type.capitalize()} - {prio_name}"))
+            schedules_for_gantt.append((
+                sched,
+                f"{algo_type.capitalize()} - {prio_name}"
+                ))
             print(f"[{algo_type} - {prio_name}] Makespan: {mksp}, Durée: {duration:.4f}s")
 
     # Exporter résultats dans un fichier CSV
@@ -201,21 +222,21 @@ def run_all():
     df.to_csv('figures/comparison_ms_rcpsp.csv', index=False)
 
     # Tracer graphiques comparatifs pour le makespan
-    plt.figure(figsize=(10,6))
+    plt.figure(figsize=(10, 6))
     sns.barplot(data=df, x='priority', y='makespan', hue='algo')
     plt.title("Makespan selon algorithme et priorité")
     plt.savefig("figures/makespan_comparison.png")
     plt.show()
 
     # Tracer graphiques comparatifs pour la durée d'exécution
-    plt.figure(figsize=(10,6))
+    plt.figure(figsize=(10, 6))
     sns.barplot(data=df, x='priority', y='duration_sec', hue='algo')
     plt.title("Durée d'exécution selon algorithme et priorité")
     plt.savefig("figures/duration_comparison.png")
     plt.show()
 
     # Afficher les diagrammes de Gantt pour chaque ordonnancement testé
-    fig, axs = plt.subplots(4, 2, figsize=(12, 14), sharex=True)
+    fig, axs = plt.subplots(4, 2, figsize=(20, 16), sharex=True)
     for ax, (sched, title) in zip(axs.flatten(), schedules_for_gantt):
         plot_gantt(sched, ax, title)
     plt.tight_layout()
