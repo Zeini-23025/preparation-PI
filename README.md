@@ -113,16 +113,3 @@ La sortie affiche l’ordre des tâches, leurs temps de démarrage et de fin, ai
 
 ---
 
-## Exemple d’utilisation
-
-1. Placez vos fichiers de données dans le dossier `data/`.
-2. Exécutez le script Python :
-    ```bash
-    python main.py
-    ```
-3. Ou compilez et exécutez la version C++ :
-    ```bash
-    g++ main.cpp -o main
-    ./main
-    ```
-4. Consultez les résultats dans `comparison_ms_rcpsp.csv`, les graphiques dans `figures/`, et les ordonnancements en console (C++).
